@@ -84,26 +84,29 @@ public class UserService {
     }
 
     private void sendUpgradeEmail(User user){
-//        Properties props=new Properties();
-//        props.put("mail.smtp.host","mail.ksug.org");
-//        Session s= Session.getInstance(props,null);
-//
-//        MimeMessage message =new MimeMessage(s);
-//        try{
-//            message.setFrom(new InternetAddress("useradmin@ksug.org"));
-//            message.addRecipient(Message.RecipientType.TO,
-//                    new InternetAddress(user.getEmail()));
-//            message.setSubject("Upgrade 안내");
-//            message.setText("사용자님의 등급이 "+user.getLevel().name()+"로 업그레이드 되었습니다.");
-//
-//            Transport.send(message);
-//        } catch (AddressException e) {
-//            throw new RuntimeException(e);
-//        } catch (MessagingException e) {
-//            throw new RuntimeException(e);
-//
+        /*
+        Properties props=new Properties();
+        props.put("mail.smtp.host","mail.ksug.org");
+        Session s= Session.getInstance(props,null);
 
-        // MailMessage 인터페이스의 구현 클래스 오브젝트를 만들어 메일 내용 작성
+        MimeMessage message =new MimeMessage(s);
+        try{
+            message.setFrom(new InternetAddress("useradmin@ksug.org"));
+            message.addRecipient(Message.RecipientType.TO,
+                    new InternetAddress(user.getEmail()));
+            message.setSubject("Upgrade 안내");
+            message.setText("사용자님의 등급이 "+user.getLevel().name()+"로 업그레이드 되었습니다.");
+
+            Transport.send(message);
+        } catch (AddressException e) {
+            throw new RuntimeException(e);
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
+        */
+
+
+         //MailMessage 인터페이스의 구현 클래스 오브젝트를 만들어 메일 내용 작성
         SimpleMailMessage mailMessage=new SimpleMailMessage();
         mailMessage.setTo(user.getEmail());
         mailMessage.setFrom("useradmin@ksug.org");
