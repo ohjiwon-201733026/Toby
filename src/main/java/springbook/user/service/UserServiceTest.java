@@ -24,8 +24,8 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.CoreMatchers.is;
 
 import static org.junit.Assert.*;
-import static springbook.user.service.UserService.MIN_LOGCOUNT_FOR_SILVER;
-import static springbook.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
+import static springbook.user.service.UserServiceImpl.MIN_LOGCOUNT_FOR_SILVER;
+import static springbook.user.service.UserServiceImpl.MIN_RECCOMEND_FOR_GOLD;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "/test-applicationContext.xml")
@@ -33,6 +33,7 @@ public class UserServiceTest {
 
     @Autowired UserDao userDao;
     @Autowired UserService userService;
+    @Autowired UserServiceImpl userServiceImpl;
     @Autowired DataSource dataSource;
     @Autowired PlatformTransactionManager transactionManager;
     @Autowired MailSender mailSender;
@@ -62,7 +63,7 @@ public class UserServiceTest {
              userDao.add(user);
          }
          MockMailSender mockMailSender=new MockMailSender();
-         userService.setMailSender(mockMailSender);
+         userServiceImpl.setMailSender(mockMailSender);
 
          userService.upgradeLevels();
 
@@ -112,19 +113,27 @@ public class UserServiceTest {
 
     @Test
     public void upgradeAllOrNothing() throws Exception{
-         UserService testUserService=new UserService.TestUserService(users.get(3).getId());
+         UserServiceImpl.TestUserService testUserService=
+                 new UserServiceImpl.TestUserService(users.get(3).getId());
          testUserService.setUserDao(this.userDao);
-         testUserService.setTransactionManager(transactionManager);
          testUserService.setMailSender(mailSender);
+         
+         // 트랜잭션 기능을 분리한 UserServiceTx는 예외 발생용으로
+         // 수정할 필요가 없으니 그대로 사용
+         UserServiceTx txUserService=new UserServiceTx();
+         txUserService.setTransactionManager(transactionManager);
+         txUserService.setUserService(testUserService);
+
          userDao.deleteAll();
         for (User user : users) {
             userDao.add(user);
         }
 
         try{
-            testUserService.upgradeLevels();
+            // 트랜잭션 기능을 분리한 오브젝트를 통해 예외 발생용 TestUserService가 호출되게 함
+            txUserService.upgradeLevels();
             fail("TestUserServiceException expected");
-        }catch (UserService.TestUserServiceException e){
+        }catch (UserServiceImpl.TestUserServiceException e){
         }
 
         checkLevelUpgrade(users.get(1),false);
@@ -150,6 +159,51 @@ public class UserServiceTest {
         public void send(SimpleMailMessage[] simpleMessages) throws MailException {
 
         }
+    }
+
+    static class MockUserDao implements UserDao{
+         private List<User> users; // 레벨 업그레이드 후보 User 오브젝트 목록
+         private List<User> updated=new ArrayList<>(); // 업그레이드 대상 오브젝트를 저장해 둘 목록
+
+        private MockUserDao(List<User> users){
+            this.users=users;
+        }
+
+        public List<User> getUpdated(){
+            return this.updated;
+        }
+
+        @Override
+        public void update(User user) {
+            updated.add(user);
+        }
+        @Override
+        public List<User> getAll() {
+            return this.users;
+        }
+        // 테스트에 사용되지 않는 메소드
+        @Override
+        public void add(User user) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public User get(String id) {
+            throw new UnsupportedOperationException();
+        }
+
+
+        @Override
+        public void deleteAll() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getCount() {
+            throw new UnsupportedOperationException();
+        }
+
+
     }
 
 
