@@ -12,11 +12,13 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
 
 import javax.sql.DataSource;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -186,9 +188,17 @@ public class UserServiceTest {
 
         // 트랜잭션 기능을 분리한 UserServiceTx는 예외 발생용으로
         // 수정할 필요가 없으니 그대로 사용
-        UserServiceTx txUserService=new UserServiceTx();
-        txUserService.setTransactionManager(transactionManager);
-        txUserService.setUserService(testUserService);
+//        UserServiceTx txUserService=new UserServiceTx();
+//        txUserService.setTransactionManager(transactionManager);
+//        txUserService.setUserService(testUserService);
+
+        TransactionHandler txHandler=new TransactionHandler();
+        txHandler.setTarget(testUserService);
+        txHandler.setTransactionManager(transactionManager);
+        txHandler.setPattern("upgradeLevels");
+        UserService txUserService=(UserService) Proxy.newProxyInstance(
+                getClass().getClassLoader(),new Class[]{UserService.class},txHandler
+        );
 
         userDao.deleteAll();
         for (User user : users) {
