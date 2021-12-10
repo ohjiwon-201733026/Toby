@@ -1,10 +1,13 @@
 package springbook.user.service;
 
+import javassist.util.proxy.ProxyFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
@@ -41,7 +44,10 @@ public class UserServiceTest {
     @Autowired DataSource dataSource;
     @Autowired PlatformTransactionManager transactionManager;
     @Autowired MailSender mailSender;
+    @Autowired
+    ApplicationContext context; // 팩토리 빈을 가져오려면 애플리케이션 컨텍스트 필요
     List<User> users;
+    
 
     @Before
     public void setUp(){
@@ -180,25 +186,20 @@ public class UserServiceTest {
     }
 
     @Test
+    @DirtiesContext
     public void upgradeAllOrNothing() throws Exception{
         UserServiceImpl.TestUserService testUserService=
                 new UserServiceImpl.TestUserService(users.get(3).getId());
         testUserService.setUserDao(this.userDao);
         testUserService.setMailSender(mailSender);
 
-        // 트랜잭션 기능을 분리한 UserServiceTx는 예외 발생용으로
-        // 수정할 필요가 없으니 그대로 사용
-//        UserServiceTx txUserService=new UserServiceTx();
-//        txUserService.setTransactionManager(transactionManager);
-//        txUserService.setUserService(testUserService);
+        ProxyFactoryBean txProxyFactoryBean
+                =context.getBean("&userService",ProxyFactoryBean.class);
+        // 팩토리 빈 자체를 가져와야하므로 빈 이름에 &를 반드시 넣어야함
+        txProxyFactoryBean.setTarget(testUserService);
+        UserService txUserService=(UserService) txProxyFactoryBean.getObject();
 
-        TransactionHandler txHandler=new TransactionHandler();
-        txHandler.setTarget(testUserService);
-        txHandler.setTransactionManager(transactionManager);
-        txHandler.setPattern("upgradeLevels");
-        UserService txUserService=(UserService) Proxy.newProxyInstance(
-                getClass().getClassLoader(),new Class[]{UserService.class},txHandler
-        );
+
 
         userDao.deleteAll();
         for (User user : users) {

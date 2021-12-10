@@ -11,10 +11,12 @@
     <bean id="userDao" class="springbook.user.dao.UserDaoJdbc">
         <property name="dataSource" ref="dataSource"/>
     </bean>
-    <bean id="userService" class="springbook.user.service.UserServiceTx">
-        <property name="transactionManager" ref="transactionManager"/>
-        <property name="userService" ref="userServiceImpl"/>
-    </bean>
+<!--    <bean id="userService" class="springbook.user.service.TxProxyFactoryBean">-->
+<!--        <property name="target" ref="userServiceImpl"/>-->
+<!--        <property name="transactionManager" ref="transactionManager"/>-->
+<!--        <property name="pattern" value="upgradeLevels"/>-->
+<!--        <property name="serviceInterface" value="springbook.user.service.UserService"/>-->
+<!--    </bean>-->
     <bean id="userServiceImpl" class="springbook.user.service.UserServiceImpl">
         <property name="userDao" ref="userDao"/>
         <property name="mailSender" ref="mailSender"/>
@@ -26,5 +28,27 @@
     <bean id="message"
           class="springbook.learningtest.spring.factorybean.MessageFactoryBean">
         <property name="text" value="Factory Bean"/>
+    </bean>
+<!--    어드바이스-->
+    <bean id="transactionAdvice" class="springbook.user.service.TransactionAdvice">
+        <property name="transactionManager" ref="transactionManager"></property>
+    </bean>
+<!--    포인터컷-->
+    <bean id="transactionPointcut" class="org.springframework.aop.support.NameMatchMethodPointcut">
+        <property name="mappedName" value="upgrade*"/>
+    </bean>
+<!--    어드바이저-->
+    <bean id="transactionAdvisor" class="org.springframework.aop.support.DefaultBeanFactoryPointcutAdvisor">
+        <property name="advice" ref="transactionAdvice"/>
+        <property name="pointcut" ref="transactionPointcut"/>
+    </bean>
+<!--    프록시팩토리빈-->
+    <bean id="userService" class="org.springframework.aop.framework.ProxyFactoryBean">
+        <property name="target" ref="userServiceImpl" />
+        <property name="interceptorNames">
+            <list>
+                <value>transactionAdvisor</value>
+            </list>
+        </property>
     </bean>
 </beans>
