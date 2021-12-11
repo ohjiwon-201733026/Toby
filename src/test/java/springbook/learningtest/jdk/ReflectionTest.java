@@ -43,7 +43,7 @@ public class ReflectionTest {
         Hello hello=new HelloTarget(); // 타깃은 인터페이스를 통해 접근하는 습관
         assertThat(hello.sayHello("Toby"),is("Hello Toby"));
         assertThat(hello.sayHi("Toby"),is("Hi Toby"));
-        assertThat(hello.sayThankYou("Toby"),is("Thank you Toby"));
+        assertThat(hello.sayThankYou("Toby"),is("Thank You Toby"));
 
         /*
         Hello proxiedHello= new HelloUppercase(new HelloTarget());// 프록시 통해 타깃에 접근
@@ -108,14 +108,14 @@ public class ReflectionTest {
         classMethodPointcut.setMappedName("sayH*"); // sayH로 시작하는 메소드 이름을 가진 메소드만 선정
         
         // 테스트
-        chcekAdviced(new HelloTarget(),classMethodPointcut,true);
+        checkAdviced(new HelloTarget(),classMethodPointcut,true);
         class HelloWorld extends HelloTarget{};
-        chcekAdviced(new HelloWorld(),classMethodPointcut,false);
+        checkAdviced(new HelloWorld(),classMethodPointcut,false);
         class HelloToy extends HelloTarget{};
-        chcekAdviced(new HelloToy(),classMethodPointcut,true);
+        checkAdviced(new HelloToy(),classMethodPointcut,true);
     }
 
-    private void chcekAdviced(Object target, Pointcut pointcut, boolean adviced){
+    private void checkAdviced(Object target, Pointcut pointcut, boolean adviced){
         ProxyFactoryBean pfBean=new ProxyFactoryBean();
         pfBean.setTarget(target);
         pfBean.addAdvisor(new DefaultPointcutAdvisor(pointcut,new UppercaseAdvice()));

@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.springframework.aop.aspectj.AspectJExpressionPointcut;
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -16,6 +17,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
+import springbook.learningtest.spring.pointcut.Bean;
+import springbook.learningtest.spring.pointcut.Target;
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
@@ -40,12 +43,12 @@ public class UserServiceTest {
 
     @Autowired UserDao userDao;
     @Autowired UserService userService;
-    @Autowired UserServiceImpl userServiceImpl;
-    @Autowired DataSource dataSource;
-    @Autowired PlatformTransactionManager transactionManager;
+    @Autowired UserService testUserService;
+//    @Autowired UserServiceImpl userServiceImpl;
+//    @Autowired DataSource dataSource;
+//    @Autowired PlatformTransactionManager transactionManager;
     @Autowired MailSender mailSender;
-    @Autowired
-    ApplicationContext context; // 팩토리 빈을 가져오려면 애플리케이션 컨텍스트 필요
+    @Autowired ApplicationContext context; // 팩토리 빈을 가져오려면 애플리케이션 컨텍스트 필요
     List<User> users;
     
 
@@ -186,20 +189,7 @@ public class UserServiceTest {
     }
 
     @Test
-    @DirtiesContext
     public void upgradeAllOrNothing() throws Exception{
-        UserServiceImpl.TestUserService testUserService=
-                new UserServiceImpl.TestUserService(users.get(3).getId());
-        testUserService.setUserDao(this.userDao);
-        testUserService.setMailSender(mailSender);
-
-        ProxyFactoryBean txProxyFactoryBean
-                =context.getBean("&userService",ProxyFactoryBean.class);
-        // 팩토리 빈 자체를 가져와야하므로 빈 이름에 &를 반드시 넣어야함
-        txProxyFactoryBean.setTarget(testUserService);
-        UserService txUserService=(UserService) txProxyFactoryBean.getObject();
-
-
 
         userDao.deleteAll();
         for (User user : users) {
@@ -208,7 +198,7 @@ public class UserServiceTest {
 
         try{
             // 트랜잭션 기능을 분리한 오브젝트를 통해 예외 발생용 TestUserService가 호출되게 함
-            txUserService.upgradeLevels();
+            this.testUserService.upgradeLevels();
             fail("TestUserServiceException expected");
         }catch (UserServiceImpl.TestUserServiceException e){
         }
@@ -216,6 +206,36 @@ public class UserServiceTest {
         checkLevelUpgrade(users.get(1),false);
     }
 
+//    @Test
+//    public void advisorAutoProxyCreator(){
+//        assertThat(testUserService,is(java.lang.reflect.Proxy.class));
+//    }
+
+    @Test
+    public void methodSignaturePointcut() throws SecurityException,NoSuchMethodException{
+        AspectJExpressionPointcut pointcut=new AspectJExpressionPointcut();
+        pointcut.setExpression("execution(public int "+
+                "springbook.learningtest.spring.pointcut.Target.minus(int,int "+
+                "throws java.lang.RuntimeException");
+
+        // Target.minus()
+        assertThat(pointcut.getClassFilter().matches(Target.class) &&
+                pointcut.getMethodMatcher().matches(
+                        Target.class.getMethod("minus",int.class,int.class),null)
+                ,is(true));
+
+        // Target.plus()
+        assertThat(pointcut.getClassFilter().matches(Target.class) &&
+                        pointcut.getMethodMatcher().matches(
+                                Target.class.getMethod("plus",int.class,int.class),null)
+                ,is(false));
+
+        // Bean.method()
+        assertThat(pointcut.getClassFilter().matches(Bean.class) &&
+                pointcut.getMethodMatcher().matches(
+                        Target.class.getMethod("method"),null)
+                ,is(false));
+    }
     static class MockMailSender implements MailSender{
         // UserService로부터 전송 요청을 받은 메일 주소를 저장해두고
         // 이를 읽을 수 있게 한다
@@ -235,6 +255,16 @@ public class UserServiceTest {
         @Override
         public void send(SimpleMailMessage[] simpleMessages) throws MailException {
 
+        }
+    }
+
+    static class TestUserServiceImpl extends UserServiceImpl{
+        private String id="4";
+
+        protected void upgradeLevel(User user){
+            if(user.getId().equals(this.id))
+                throw new TestUserServiceException();
+            super.upgradeLevel(user);
         }
     }
 
