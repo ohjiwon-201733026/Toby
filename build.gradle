@@ -22,6 +22,7 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-jdbc')
     compile('org.springframework.boot:spring-boot-starter-oauth2-client')
     runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.aspectj:aspectjweaver:1.6.6'
 //    testImplementation('org.springframework.boot:spring-boot-starter-test')
     testCompile("org.springframework.boot:spring-boot-starter-test")
     compile group: 'org.springframework', name: 'spring-context', version: '5.0.7.RELEASE'
