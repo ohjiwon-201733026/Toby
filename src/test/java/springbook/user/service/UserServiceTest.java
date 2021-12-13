@@ -9,6 +9,7 @@ import org.springframework.aop.aspectj.AspectJExpressionPointcut;
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
@@ -242,6 +243,11 @@ public class UserServiceTest {
         targetClassPointcutMatches("execution(* *(..))",true,true,true,true,true,true);
     }
 
+    @Test(expected = TransientDataAccessResourceException.class)
+    public void readOnlyTransactionAttribute(){
+        testUserService.getAll();
+    }
+
 
 
     // 포인트컷과 메소드를 비교해주는 테스트 헬퍼 메소드
@@ -293,6 +299,13 @@ public class UserServiceTest {
             if(user.getId().equals(this.id))
                 throw new TestUserServiceException();
             super.upgradeLevel(user);
+        }
+
+        public List<User> getAll(){
+            for (User user : super.getAll()) {
+                super.update(user); // 강제로 쓰기 시도 -> 예외 발생
+            }
+            return null;
         }
     }
 
