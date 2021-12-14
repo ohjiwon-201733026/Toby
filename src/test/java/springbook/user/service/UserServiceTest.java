@@ -18,6 +18,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import springbook.learningtest.spring.pointcut.Bean;
 import springbook.learningtest.spring.pointcut.Target;
 import springbook.user.dao.UserDao;
@@ -40,11 +42,13 @@ import static springbook.user.service.UserServiceImpl.MIN_RECCOMEND_FOR_GOLD;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "/test-applicationContext.xml")
+@Transactional
 public class UserServiceTest {
 
     @Autowired UserDao userDao;
     @Autowired UserService userService;
     @Autowired UserService testUserService;
+    @Autowired PlatformTransactionManager transactionManager;
 //    @Autowired UserServiceImpl userServiceImpl;
 //    @Autowired DataSource dataSource;
 //    @Autowired PlatformTransactionManager transactionManager;
@@ -248,7 +252,14 @@ public class UserServiceTest {
         testUserService.getAll();
     }
 
+    @Test
+    public void transactionSync() {
 
+            userService.deleteAll();
+            userService.add(users.get(0));
+            userService.add(users.get(1));
+
+    }
 
     // 포인트컷과 메소드를 비교해주는 테스트 헬퍼 메소드
     public void pointcutMatches(String expression,Boolean expected, Class<?> clazz,
