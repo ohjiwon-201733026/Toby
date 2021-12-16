@@ -71,7 +71,7 @@ public class UserDaoTest {
 
     @Test
     public void count() throws SQLException, ClassNotFoundException {
-
+        System.out.println(System.getProperty("user.dir"));
 
         dao.deleteAll();
         assertThat(dao.getCount(), is(0));
