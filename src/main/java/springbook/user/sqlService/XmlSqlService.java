@@ -4,6 +4,7 @@ import springbook.user.dao.UserDao;
 import springbook.user.sqlService.jaxb.SqlType;
 import springbook.user.sqlService.jaxb.Sqlmap;
 
+import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -21,6 +22,7 @@ public class XmlSqlService implements SqlService{
         this.sqlmapFile=sqlmapFile;
     }
 
+    @PostConstruct
     public void loadSql(){
         String contextPath= Sqlmap.class.getPackage().getName();
         try{

@@ -23,6 +23,7 @@
         <property name="sqlService" ref="sqlService"/>
     </bean>
     <bean id="sqlService" class="springbook.user.sqlService.XmlSqlService">
+        <property name="sqlmapFile" value="sqlmap.xml"/>
     </bean>
     <bean id="userService" class="springbook.user.service.UserServiceImpl">
         <property name="userDao" ref="userDao"/>
