@@ -7,6 +7,7 @@
     <sql key="userGet">select * from users where id=?</sql>
     <sql key="userDeleteAll">delete from users</sql>
     <sql key="userGetCount">select count(*) from users</sql>
+    <sql key="userGetAll">select * from users</sql>
     <sql key="userUpdate">update users set name=?,password=?,level=?,login=?,
         recommend=?,email=? where id=?</sql>
 </sqlmap>
