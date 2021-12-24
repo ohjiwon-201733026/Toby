@@ -39,8 +39,9 @@
     <bean id="sqlReader" class="springbook.user.sqlService.JaxbXmlSqlReader">
         <property name="sqlmapFile" value="sqlmap.xml"/>
     </bean>
-    <bean id="sqlRegistry" class="springbook.user.sqlService.HashMapSqlRegistry">
+    <bean id="sqlRegistry" class="springbook.user.sqlService.ConcurrentHashMapSqlRegistry">
     </bean>
+
     <bean id="userService" class="springbook.user.service.UserServiceImpl">
         <property name="userDao" ref="userDao"/>
         <property name="mailSender" ref="mailSender"/>
@@ -98,4 +99,5 @@
     </tx:advice>
     <tx:annotation-driven/>
     <context:annotation-config/>
+
 </beans>

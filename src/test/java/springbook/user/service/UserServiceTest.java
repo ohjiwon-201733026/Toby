@@ -41,6 +41,7 @@ import static springbook.user.service.UserServiceImpl.MIN_LOGCOUNT_FOR_SILVER;
 import static springbook.user.service.UserServiceImpl.MIN_RECCOMEND_FOR_GOLD;
 
 @RunWith(SpringJUnit4ClassRunner.class)
+//@ContextConfiguration(locations = "/springbook/TestApplicationContext.class")
 @ContextConfiguration(locations = "/test-applicationContext.xml")
 @Transactional
 public class UserServiceTest {
@@ -303,7 +304,7 @@ public class UserServiceTest {
         }
     }
 
-    static class TestUserService extends UserServiceImpl{
+    public static class TestUserService extends UserServiceImpl{
         private String id="4";
 
         protected void upgradeLevel(User user){
